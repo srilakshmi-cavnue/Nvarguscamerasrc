@@ -47,6 +47,8 @@
 #include <Argus/Argus.h>
 #include <EGLStream/EGLStream.h>
 #include <EGLStream/NV/ImageNativeBuffer.h>
+#include <Argus/Ext/SensorTimestampTsc.h>
+
 #include <iostream>
 #include <fstream>
 #include <math.h>
@@ -134,6 +136,15 @@ vector<Argus::CameraDevice*> CameraProviderContainer::getCameraDevices()
 }
 
 shared_ptr<CameraProviderContainer> g_cameraProvider = make_shared<CameraProviderContainer>();
+
+// Move it here to avoid implicit declaration error
+typedef struct AuxiliaryData {
+  gint64 frame_num;
+  gint64 timestamp;
+} AuxData;
+
+// Create new Gst source pad to hold the GstBuffer
+GstPad *srcpad2 = NULL;
 
 namespace ArgusSamples
 {
@@ -659,10 +670,79 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
       {
         guint64 frame_timestamp = iFrame->getTime() - ground_clk;
         guint64 millisec_timestamp = ((frame_timestamp % (1000000000)))/1000000;
-        CONSUMER_PRINT("Acquired Frame: %llu, time sec %llu msec %llu\n",
-                   static_cast<unsigned long long>(iFrame->getNumber()),
-                   static_cast<unsigned long long>(frame_timestamp / (1000000000)),
-                   static_cast<unsigned long long>(millisec_timestamp));
+        //CONSUMER_PRINT("Acquired Frame: %llu, time sec %llu msec %llu\n",
+        //           static_cast<unsigned long long>(iFrame->getNumber()),
+        //           static_cast<unsigned long long>(frame_timestamp / (1000000000)),
+        //           static_cast<unsigned long long>(millisec_timestamp));
+
+        IArgusCaptureMetadata *iArgusCaptureMetadata = interface_cast<IArgusCaptureMetadata>(frame);
+        if (!iArgusCaptureMetadata)
+          ORIGINATE_ERROR("Failed to get IArgusCaptureMetadata interface.");
+        CaptureMetadata *metadata = iArgusCaptureMetadata->getMetadata();
+        ICaptureMetadata *iMetadata = interface_cast<ICaptureMetadata>(metadata);
+        if (!iMetadata)
+          ORIGINATE_ERROR("Failed to get ICaptureMetadata interface.");
+
+        //CONSUMER_PRINT("\tAcquired Frame: %llu, Sensor Timestamp: %llu, LUX: %f, exp time: %lu, analog gain: %fu, ispdigitalgain : %f\n", static_cast<unsigned long long>(iFrame->getNumber()), static_cast<unsigned long long>(iMetadata->getSensorTimestamp()),iMetadata->getSceneLux(), iMetadata->getSensorExposureTime(), iMetadata->getSensorAnalogGain(), iMetadata->getIspDigitalGain());
+
+        const Ext::ISensorTimestampTsc *iSensorTimestampTsc = interface_cast<const Ext::ISensorTimestampTsc>(metadata);
+        CONSUMER_PRINT("Acquired Frame: %llu, Sensor SoF RTCPU Timestamp: %llu\n" , static_cast<unsigned long long>(iFrame->getNumber()), static_cast<unsigned long long>(iSensorTimestampTsc->getSensorSofTimestampTsc()));
+
+        // Create new structure object and fill with frame number and frame RTCPU timestamp
+        AuxData *auxdata = new AuxData();
+        size_t auxData_size = sizeof(AuxData);
+        auxdata->frame_num = static_cast<unsigned long long>(iFrame->getNumber());
+        auxdata->timestamp = static_cast<unsigned long long>(iSensorTimestampTsc->getSensorSofTimestampTsc());
+
+        // Create a new GstBuffer with preallocated data of given size
+        GstBuffer *buf = gst_buffer_new_allocate(NULL, auxData_size, NULL);
+        // Create object to map the GstBuffer to memory to access raw data
+        GstMapInfo map;
+
+        // Map the buffer's data to memory and set the buffer as writeable
+        if (gst_buffer_map(buf, &map, GST_MAP_WRITE)) {
+          // Copy auxData structure pointer to data [pointer to the mapped data]
+          memcpy(map.data, auxdata, auxData_size);
+          // Release the memory previously mapped with gst_buffer_map
+          gst_buffer_unmap(buf, &map);
+          //CONSUMER_PRINT("Copied GstBuffer's data to memory and set as writeable\n");
+          }
+        else {
+          CONSUMER_PRINT("Failed to map GstBuffer to memory\n");
+          // Decrease the refcount of the buffer to free up the memory
+          gst_buffer_unref(buf);
+        }
+        // Retrieve static GstPad 'src2' from the element
+        srcpad2 = gst_element_get_static_pad (GST_ELEMENT(src), "src2");
+
+        // If GstPad exists, then set the pad to active
+        if (GST_IS_PAD(srcpad2))
+        {
+          //CONSUMER_PRINT("Set GstPad 'src2' to active\n");
+          gst_pad_set_active(srcpad2, TRUE);
+        }
+        else
+        {
+          CONSUMER_PRINT("Failed to set GstPad 'src2' as active\n");
+        }
+
+        GstFlowReturn ret;
+        // Proceed if direction of GstPad src2 is a source pad
+        if (GST_PAD_DIRECTION(srcpad2) == GST_PAD_SRC)
+        {
+          // Push the buffer to GstPad 'src2'
+          ret = gst_pad_push(srcpad2,buf);
+          //CONSUMER_PRINT("Push GstBuffer to Gstpad 'src2', ret = %d\n", ret);
+          if (ret != GST_FLOW_OK) {
+            CONSUMER_PRINT("Failed to push GstBuffer to GstPad 'src2' and return value is %d.\n", ret);
+            gst_buffer_unref(buf); // Decrease reference count
+          }
+          else
+          {
+            CONSUMER_PRINT("Pushed GstBuffer to GstPad successfully.\n");
+            gst_buffer_unref(buf);
+          }
+        }
       }
 
       src->frameInfo->frameNum = iFrame->getNumber();
@@ -789,6 +869,7 @@ static bool execute(int32_t cameraIndex,
     {
       iStreamSettings->setPixelFormat(PIXEL_FMT_YCbCr_420_888);
       iStreamSettings->setResolution(streamSize);
+      iStreamSettings->setMetadataEnable(true);
     }
     if (src->streamSettings.get() == NULL)
       ORIGINATE_ERROR("Failed to get streamSettings");
@@ -1234,12 +1315,12 @@ enum
   PROP_EVENT_TIMEOUT,
   PROP_ACQUIRE_TIMEOUT
 };
-
+/*
 typedef struct AuxiliaryData {
   gint64 frame_num;
   gint64 timestamp;
 } AuxData;
-
+*/
 struct _GstNVArgusMemory
 {
   GstMemory mem;
@@ -1265,6 +1346,13 @@ struct _GstNVArgusMemoryAllocatorClass
  */
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS (CAPTURE_CAPS)
+  );
+
+// Create a new static pad template to be used
+static GstStaticPadTemplate src2 = GST_STATIC_PAD_TEMPLATE ("src2",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_STATIC_CAPS (CAPTURE_CAPS)
@@ -2090,6 +2178,9 @@ gst_nv_argus_camera_src_class_init (GstNvArgusCameraSrcClass * klass)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src2)); //Register the static pad template "src2" to the element class
 }
 
 /* initialize the new element
@@ -2145,6 +2236,11 @@ gst_nv_argus_camera_src_init (GstNvArgusCameraSrc * src)
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_do_timestamp (GST_BASE_SRC (src), TRUE);
+
+  // Create a pad using a static pad template
+  srcpad2 = gst_pad_new_from_static_template(&src2,"src2");
+  // Add the pad to the element
+  gst_element_add_pad(GST_ELEMENT(src), srcpad2);
 }
 
 
@@ -2432,3 +2528,4 @@ GST_PLUGIN_DEFINE (
 #ifdef __cplusplus
 }
 #endif
+

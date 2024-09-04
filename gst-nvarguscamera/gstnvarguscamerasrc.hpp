@@ -119,7 +119,7 @@ struct _GstNvArgusCameraSrc
 {
   GstBaseSrc base_nvarguscamera;
 
-  GstPad *srcpad;
+  GstPad *srcpad; //This GstPad is tied to the GstElement. It needs to be pushed downstream manually
 
   GThread *consumer_thread;
   GThread *argus_thread;
