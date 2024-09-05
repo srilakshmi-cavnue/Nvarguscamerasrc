@@ -666,6 +666,18 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
 
       static const guint64 ground_clk = iFrame->getTime();;
 
+      IArgusCaptureMetadata *iArgusCaptureMetadata = interface_cast<IArgusCaptureMetadata>(frame);
+      if (!iArgusCaptureMetadata)
+        ORIGINATE_ERROR("Failed to get IArgusCaptureMetadata interface.");
+      CaptureMetadata *metadata = iArgusCaptureMetadata->getMetadata();
+      ICaptureMetadata *iMetadata = interface_cast<ICaptureMetadata>(metadata);
+      if (!iMetadata)
+        ORIGINATE_ERROR("Failed to get ICaptureMetadata interface.");
+
+      const Ext::ISensorTimestampTsc *iSensorTimestampTsc = interface_cast<const Ext::ISensorTimestampTsc>(metadata);
+      if (!iSensorTimestampTsc)
+        ORIGINATE_ERROR("Failed to get ISensorTimestampTsc interface.");
+
       if (!src->silent)
       {
         guint64 frame_timestamp = iFrame->getTime() - ground_clk;
@@ -675,73 +687,64 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
         //           static_cast<unsigned long long>(frame_timestamp / (1000000000)),
         //           static_cast<unsigned long long>(millisec_timestamp));
 
-        IArgusCaptureMetadata *iArgusCaptureMetadata = interface_cast<IArgusCaptureMetadata>(frame);
-        if (!iArgusCaptureMetadata)
-          ORIGINATE_ERROR("Failed to get IArgusCaptureMetadata interface.");
-        CaptureMetadata *metadata = iArgusCaptureMetadata->getMetadata();
-        ICaptureMetadata *iMetadata = interface_cast<ICaptureMetadata>(metadata);
-        if (!iMetadata)
-          ORIGINATE_ERROR("Failed to get ICaptureMetadata interface.");
-
         //CONSUMER_PRINT("\tAcquired Frame: %llu, Sensor Timestamp: %llu, LUX: %f, exp time: %lu, analog gain: %fu, ispdigitalgain : %f\n", static_cast<unsigned long long>(iFrame->getNumber()), static_cast<unsigned long long>(iMetadata->getSensorTimestamp()),iMetadata->getSceneLux(), iMetadata->getSensorExposureTime(), iMetadata->getSensorAnalogGain(), iMetadata->getIspDigitalGain());
 
-        const Ext::ISensorTimestampTsc *iSensorTimestampTsc = interface_cast<const Ext::ISensorTimestampTsc>(metadata);
         CONSUMER_PRINT("Acquired Frame: %llu, Sensor SoF RTCPU Timestamp: %llu\n" , static_cast<unsigned long long>(iFrame->getNumber()), static_cast<unsigned long long>(iSensorTimestampTsc->getSensorSofTimestampTsc()));
+      }
 
-        // Create new structure object and fill with frame number and frame RTCPU timestamp
-        AuxData *auxdata = new AuxData();
-        size_t auxData_size = sizeof(AuxData);
-        auxdata->frame_num = static_cast<unsigned long long>(iFrame->getNumber());
-        auxdata->timestamp = static_cast<unsigned long long>(iSensorTimestampTsc->getSensorSofTimestampTsc());
+      // Create new structure object and fill with frame number and frame RTCPU timestamp
+      AuxData *auxdata = new AuxData();
+      size_t auxData_size = sizeof(AuxData);
+      auxdata->frame_num = static_cast<unsigned long long>(iFrame->getNumber());
+      auxdata->timestamp = static_cast<unsigned long long>(iSensorTimestampTsc->getSensorSofTimestampTsc());
 
-        // Create a new GstBuffer with preallocated data of given size
-        GstBuffer *buf = gst_buffer_new_allocate(NULL, auxData_size, NULL);
-        // Create object to map the GstBuffer to memory to access raw data
-        GstMapInfo map;
+      // Create a new GstBuffer with preallocated data of given size
+      GstBuffer *buf = gst_buffer_new_allocate(NULL, auxData_size, NULL);
+      // Create object to map the GstBuffer to memory to access raw data
+      GstMapInfo map;
 
-        // Map the buffer's data to memory and set the buffer as writeable
-        if (gst_buffer_map(buf, &map, GST_MAP_WRITE)) {
-          // Copy auxData structure pointer to data [pointer to the mapped data]
-          memcpy(map.data, auxdata, auxData_size);
-          // Release the memory previously mapped with gst_buffer_map
-          gst_buffer_unmap(buf, &map);
-          //CONSUMER_PRINT("Copied GstBuffer's data to memory and set as writeable\n");
-          }
-        else {
-          CONSUMER_PRINT("Failed to map GstBuffer to memory\n");
-          // Decrease the refcount of the buffer to free up the memory
-          gst_buffer_unref(buf);
-        }
-        // Retrieve static GstPad 'src2' from the element
-        srcpad2 = gst_element_get_static_pad (GST_ELEMENT(src), "src2");
+      // Map the buffer's data to memory and set the buffer as writeable
+      if (gst_buffer_map(buf, &map, GST_MAP_WRITE)) {
+        // Copy auxData structure pointer to data [pointer to the mapped data]
+        memcpy(map.data, auxdata, auxData_size);
+        // Release the memory previously mapped with gst_buffer_map
+        gst_buffer_unmap(buf, &map);
+        //CONSUMER_PRINT("Copied GstBuffer's data to memory and set as writeable\n");
+      }
+      else {
+        CONSUMER_PRINT("Failed to map GstBuffer to memory\n");
+        // Decrease the refcount of the buffer to free up the memory
+        gst_buffer_unref(buf);
+      }
+      // Retrieve static GstPad 'src2' from the element
+      srcpad2 = gst_element_get_static_pad (GST_ELEMENT(src), "src2");
 
-        // If GstPad exists, then set the pad to active
-        if (GST_IS_PAD(srcpad2))
-        {
-          //CONSUMER_PRINT("Set GstPad 'src2' to active\n");
-          gst_pad_set_active(srcpad2, TRUE);
+      // If GstPad exists, then set the pad to active
+      if (GST_IS_PAD(srcpad2))
+      {
+        //CONSUMER_PRINT("Set GstPad 'src2' to active\n");
+        gst_pad_set_active(srcpad2, TRUE);
+      }
+      else
+      {
+        CONSUMER_PRINT("Failed to set GstPad 'src2' as active\n");
+      }
+
+      GstFlowReturn ret;
+      // Proceed if direction of GstPad src2 is a source pad
+      if (GST_PAD_DIRECTION(srcpad2) == GST_PAD_SRC)
+      {
+        // Push the buffer to GstPad 'src2'
+        ret = gst_pad_push(srcpad2,buf);
+        //CONSUMER_PRINT("Push GstBuffer to Gstpad 'src2', ret = %d\n", ret);
+        if (ret != GST_FLOW_OK) {
+          CONSUMER_PRINT("Failed to push GstBuffer to GstPad 'src2' and return value is %d.\n", ret);
+          gst_buffer_unref(buf); // Decrease reference count
         }
         else
         {
-          CONSUMER_PRINT("Failed to set GstPad 'src2' as active\n");
-        }
-
-        GstFlowReturn ret;
-        // Proceed if direction of GstPad src2 is a source pad
-        if (GST_PAD_DIRECTION(srcpad2) == GST_PAD_SRC)
-        {
-          // Push the buffer to GstPad 'src2'
-          ret = gst_pad_push(srcpad2,buf);
-          //CONSUMER_PRINT("Push GstBuffer to Gstpad 'src2', ret = %d\n", ret);
-          if (ret != GST_FLOW_OK) {
-            CONSUMER_PRINT("Failed to push GstBuffer to GstPad 'src2' and return value is %d.\n", ret);
-            gst_buffer_unref(buf); // Decrease reference count
-          }
-          else
-          {
-            CONSUMER_PRINT("Pushed GstBuffer to GstPad successfully.\n");
-            gst_buffer_unref(buf);
-          }
+          CONSUMER_PRINT("Pushed GstBuffer to GstPad successfully.\n");
+          gst_buffer_unref(buf);
         }
       }
 
