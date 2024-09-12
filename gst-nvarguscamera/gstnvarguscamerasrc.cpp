@@ -700,6 +700,11 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
 
       // Create a new GstBuffer with preallocated data of given size
       GstBuffer *buf = gst_buffer_new_allocate(NULL, auxData_size, NULL);
+
+      //PTS of this GstBuffer is a fixed randome number
+      //Can set the PTS to epoch time g_get_real_time() or kernel monotonic time
+      GstClockTime pts = g_get_monotonic_time();
+
       // Create object to map the GstBuffer to memory to access raw data
       GstMapInfo map;
 
@@ -716,6 +721,10 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
         // Decrease the refcount of the buffer to free up the memory
         gst_buffer_unref(buf);
       }
+
+      //Set PTS to buffer
+      GST_BUFFER_PTS(buf) = pts;
+
       // Retrieve static GstPad 'src2' from the element
       srcpad2 = gst_element_get_static_pad (GST_ELEMENT(src), "src2");
 
