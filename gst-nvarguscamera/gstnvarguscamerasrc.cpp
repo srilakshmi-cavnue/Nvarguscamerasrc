@@ -757,13 +757,13 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
       {
         // Push the buffer to GstPad 'src2'
         ret = gst_pad_push(srcpad2,buf);
-        if (ret != GST_FLOW_OK) {
+        /*if (ret != GST_FLOW_OK) {
           CONSUMER_PRINT("Pushed GstBuffer to GstPad 'src2' and return value is %d (%s) as this pad is not linked to peer.\n",ret, gst_flow_get_name(ret));
         }
         else
         {
           CONSUMER_PRINT("Pushed GstBuffer to GstPad successfully.\n");
-        }
+        }*/
       }
       else
       {
