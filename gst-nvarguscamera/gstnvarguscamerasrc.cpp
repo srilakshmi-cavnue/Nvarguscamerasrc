@@ -141,6 +141,7 @@ shared_ptr<CameraProviderContainer> g_cameraProvider = make_shared<CameraProvide
 typedef struct AuxiliaryData {
   gint64 frame_num;
   gint64 timestamp;
+  gint64 long long clock_monotonic_time;
 } AuxData;
 
 // Create new Gst source pad to hold the GstBuffer
@@ -698,12 +699,26 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
       auxdata->frame_num = static_cast<unsigned long long>(iFrame->getNumber());
       auxdata->timestamp = static_cast<unsigned long long>(iSensorTimestampTsc->getSensorSofTimestampTsc());
 
+      //Fetch the monotonic time
+      struct timespec ts1;
+      if (clock_gettime(CLOCK_MONOTONIC, &ts1) != -1)
+      {
+        auxdata->clock_monotonic_time = ts1.tv_sec * 1.0e9 + ts1.tv_nsec;
+      }
+      else
+      {
+        CONSUMER_PRINT("Unable to fetch the monotonic time.");
+      }
+
       // Create a new GstBuffer with preallocated data of given size
       GstBuffer *buf = gst_buffer_new_allocate(NULL, auxData_size, NULL);
 
-      //PTS of this GstBuffer is a fixed randome number
-      //Can set the PTS to epoch time g_get_real_time() or kernel monotonic time
+      //PTS of this GstBuffer is a random number
+      //Set the PTS to epoch time g_get_real_time() or kernel monotonic time
       GstClockTime pts = g_get_monotonic_time();
+
+      //Set PTS to buffer
+      GST_BUFFER_PTS(buf) = pts; //Can set to the same monotonic-time as above
 
       // Create object to map the GstBuffer to memory to access raw data
       GstMapInfo map;
@@ -721,9 +736,6 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
         // Decrease the refcount of the buffer to free up the memory
         gst_buffer_unref(buf);
       }
-
-      //Set PTS to buffer
-      GST_BUFFER_PTS(buf) = pts;
 
       // Retrieve static GstPad 'src2' from the element
       srcpad2 = gst_element_get_static_pad (GST_ELEMENT(src), "src2");
@@ -2541,4 +2553,3 @@ GST_PLUGIN_DEFINE (
 #ifdef __cplusplus
 }
 #endif
-
