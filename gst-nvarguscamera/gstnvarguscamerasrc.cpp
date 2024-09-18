@@ -693,6 +693,25 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
         CONSUMER_PRINT("Acquired Frame: %llu, Sensor SoF RTCPU Timestamp: %llu\n" , static_cast<unsigned long long>(iFrame->getNumber()), static_cast<unsigned long long>(iSensorTimestampTsc->getSensorSofTimestampTsc()));
       }
 
+      src->frameInfo->frameNum = iFrame->getNumber();
+      src->frameInfo->frameTime = iFrame->getTime();
+
+      g_mutex_lock (&src->argus_buffers_queue_lock);
+      g_queue_push_tail (src->argus_buffers, (src->frameInfo));
+      g_cond_signal (&src->argus_buffers_queue_cond);
+      g_mutex_unlock (&src->argus_buffers_queue_lock);
+
+      g_mutex_lock (&src->argus_buffer_consumed_lock);
+      while (!src->is_argus_buffer_consumed)
+      {
+        gint64 until;
+        until = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
+        g_cond_wait_until (&src->argus_buffer_consumed_cond, &src->argus_buffer_consumed_lock, until);
+      }
+      src->is_argus_buffer_consumed = FALSE;
+      g_mutex_unlock (&src->argus_buffer_consumed_lock);
+
+      // Write frame number and frame RTCPU to a new GstBuffer, after writing the above frameInfo the queue.
       // Create new structure object and fill with frame number and frame RTCPU timestamp
       AuxData *auxdata = new AuxData();
       size_t auxData_size = sizeof(AuxData);
@@ -769,24 +788,6 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
       {
         CONSUMER_PRINT("Failed to push data, as this is not a source GstPad.\n");
       }
-
-      src->frameInfo->frameNum = iFrame->getNumber();
-      src->frameInfo->frameTime = iFrame->getTime();
-
-      g_mutex_lock (&src->argus_buffers_queue_lock);
-      g_queue_push_tail (src->argus_buffers, (src->frameInfo));
-      g_cond_signal (&src->argus_buffers_queue_cond);
-      g_mutex_unlock (&src->argus_buffers_queue_lock);
-
-      g_mutex_lock (&src->argus_buffer_consumed_lock);
-      while (!src->is_argus_buffer_consumed)
-      {
-        gint64 until;
-        until = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
-        g_cond_wait_until (&src->argus_buffer_consumed_cond, &src->argus_buffer_consumed_lock, until);
-      }
-      src->is_argus_buffer_consumed = FALSE;
-      g_mutex_unlock (&src->argus_buffer_consumed_lock);
     }
   }
 
