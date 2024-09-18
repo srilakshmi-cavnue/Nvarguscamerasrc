@@ -303,6 +303,7 @@ private:
 
   OutputStream* m_stream;
   //GstNvArgusCameraSrc *argus_src;
+  // Create a FrameConsumer object to read from output stream
   UniqueObj<FrameConsumer> m_consumer;
 };
 
@@ -415,6 +416,7 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
     }
 
     {
+      // Frame object acquires frames from FrameConsumer object
       UniqueObj<Frame> frame(iFrameConsumer->acquireFrame(src->acquire_timeout, &frame_status));
 
       if (src->stop_requested == TRUE || src->timeout_complete == TRUE)
@@ -667,6 +669,7 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
 
       static const guint64 ground_clk = iFrame->getTime();;
 
+      // Fetch the captured frame metadata (from libargus APIs)
       IArgusCaptureMetadata *iArgusCaptureMetadata = interface_cast<IArgusCaptureMetadata>(frame);
       if (!iArgusCaptureMetadata)
         ORIGINATE_ERROR("Failed to get IArgusCaptureMetadata interface.");
@@ -675,6 +678,7 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
       if (!iMetadata)
         ORIGINATE_ERROR("Failed to get ICaptureMetadata interface.");
 
+      // Fetch the sensor SoF (VI HW - RTCPU TSC) timestamp
       const Ext::ISensorTimestampTsc *iSensorTimestampTsc = interface_cast<const Ext::ISensorTimestampTsc>(metadata);
       if (!iSensorTimestampTsc)
         ORIGINATE_ERROR("Failed to get ISensorTimestampTsc interface.");
@@ -693,11 +697,12 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
         CONSUMER_PRINT("Acquired Frame: %llu, Sensor SoF RTCPU Timestamp: %llu\n" , static_cast<unsigned long long>(iFrame->getNumber()), static_cast<unsigned long long>(iSensorTimestampTsc->getSensorSofTimestampTsc()));
       }
 
+      // Send the frame number and frame timestamp in GQueue to the 'consumer'
       src->frameInfo->frameNum = iFrame->getNumber();
       src->frameInfo->frameTime = iFrame->getTime();
 
       g_mutex_lock (&src->argus_buffers_queue_lock);
-      g_queue_push_tail (src->argus_buffers, (src->frameInfo));
+      g_queue_push_tail (src->argus_buffers, (src->frameInfo)); // Push frameInfo to the end of 'argus_buffers' GQueue
       g_cond_signal (&src->argus_buffers_queue_cond);
       g_mutex_unlock (&src->argus_buffers_queue_lock);
 
@@ -1596,8 +1601,8 @@ static gboolean gst_nv_argus_camera_set_caps (GstBaseSrc *base, GstCaps *caps)
         "gpu-id", G_TYPE_UINT, 0,
         "batch-size", G_TYPE_UINT, 1, NULL);
   gst_buffer_pool_set_config (src->pool, config);
-  src->argus_buffers = g_queue_new ();
-  src->nvmm_buffers = g_queue_new ();
+  src->argus_buffers = g_queue_new (); // Queue for frameInfo including frame number and frame timestamp
+  src->nvmm_buffers = g_queue_new (); // Queue for GstBuffers including frame metadata
   gst_buffer_pool_set_active (src->pool, TRUE);
 
   src->consumer_thread = g_thread_new ("consumer_thread", consumer_thread, src);
@@ -1798,7 +1803,13 @@ consumer_thread (gpointer src_base)
       goto done;
     }
     gst_buffer_map (buffer, &outmap, GST_MAP_WRITE);
-    NvBufSurface*  surf = (NvBufSurface *)outmap.data;
+    NvBufSurface*  surf = (NvBufSurface *)outmap.data; // Cast the outmap's 'data' pointer to NvBufSurface* to parse the data as NvBufStructure's attributes
+    // Can extract GstBuffer contents here, depending on the attibutes
+
+    // NvBufSurface structure - https://docs.nvidia.com/metropolis/deepstream/6.0/sdk-api/structNvBufSurface.html
+    // Access attributes of NvBufSurfaceParams using *surfaceList - https://docs.nvidia.com/metropolis/deepstream/6.0/sdk-api/structNvBufSurfaceParams.html
+    // CONSUMER_PRINT("Field 1 gpuId = %u\n", surf->gpuId); // Output is 0. Value set in line 1596
+    // CONSUMER_PRINT("Field 6 colorFormat = %u\n", surf->surfaceList->colorFormat); //Output is 6 - NVBUF_COLOR_FORMAT_NV12
 
     NvBufSurface *nvbuf_surf = 0;
     retn = NvBufSurfaceFromFd(consumerFrameInfo->fd, (void**)(&nvbuf_surf));
@@ -1819,8 +1830,10 @@ consumer_thread (gpointer src_base)
 
     gst_buffer_unmap (buffer, &outmap);
 
+    // No buffer.PTS information available here
+
     g_mutex_lock (&src->nvmm_buffers_queue_lock);
-    g_queue_push_tail (src->nvmm_buffers, buffer);
+    g_queue_push_tail (src->nvmm_buffers, buffer); //Push GstBuffer to end of 'nvmm_buffers' GQueue
     g_cond_signal (&src->nvmm_buffers_queue_cond);
     g_mutex_unlock (&src->nvmm_buffers_queue_lock);
   }
