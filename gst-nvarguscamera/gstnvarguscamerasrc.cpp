@@ -1592,7 +1592,8 @@ static gboolean gst_nv_argus_camera_set_caps (GstBaseSrc *base, GstCaps *caps)
     gst_object_unref (src->pool);
     src->pool = NULL;
   }
-  src->pool = gst_nvds_buffer_pool_new();
+  src->pool = gst_nvds_buffer_pool_new(); // This is a function in DS to create buffer pool of GstBuffer with NvBufSurface objects
+  //https://forums.developer.nvidia.com/t/creating-gstbuffers-using-nvbufsurfacecreate-in-app-source/194800/3
   GstStructure *config = gst_buffer_pool_get_config (src->pool);
   gst_buffer_pool_config_set_params (config, src->outcaps, sizeof(NvBufSurface), MIN_BUFFERS, MAX_BUFFERS);
   gst_structure_set (config,
@@ -1814,10 +1815,13 @@ consumer_thread (gpointer src_base)
     NvBufSurface*  surf = (NvBufSurface *)outmap.data; // Cast the outmap's 'data' pointer to NvBufSurface* to parse the data as NvBufStructure's attributes
     // Can extract GstBuffer contents here, depending on the attibutes
 
-    // NvBufSurface structure - https://docs.nvidia.com/metropolis/deepstream/6.0/sdk-api/structNvBufSurface.html
-    // Access attributes of NvBufSurfaceParams using *surfaceList - https://docs.nvidia.com/metropolis/deepstream/6.0/sdk-api/structNvBufSurfaceParams.html
-    // CONSUMER_PRINT("Field 1 gpuId = %u\n", surf->gpuId); // Output is 0. Value set in line 1596
-    // CONSUMER_PRINT("Field 6 colorFormat = %u\n", surf->surfaceList->colorFormat); //Output is 6 - NVBUF_COLOR_FORMAT_NV12
+    /*
+    NvBufSurface structure - https://docs.nvidia.com/metropolis/deepstream/6.0/sdk-api/structNvBufSurface.html
+    This structure object can be parsed at nvinfer using pyds.NvBufSurface
+    Access attributes of NvBufSurfaceParams using *surfaceList - https://docs.nvidia.com/metropolis/deepstream/6.0/sdk-api/structNvBufSurfaceParams.html
+    CONSUMER_PRINT("Field 1 gpuId = %u\n", surf->gpuId);
+    CONSUMER_PRINT("Field 6 colorFormat = %u\n", surf->surfaceList->colorFormat); //Output is 6 - NVBUF_COLOR_FORMAT_NV12 - Maybe nested, surfaceList[0], etc.
+    */
 
     NvBufSurface *nvbuf_surf = 0;
     retn = NvBufSurfaceFromFd(consumerFrameInfo->fd, (void**)(&nvbuf_surf));
@@ -1825,7 +1829,9 @@ consumer_thread (gpointer src_base)
       GST_ERROR_OBJECT(src, "NvBufSurfaceFromFd Failed");
       goto done;
     }
+    // Frame metadata goes through transformation - https://docs.nvidia.com/metropolis/deepstream/6.0/sdk-api/nvbufsurftransform_8h.html
     retn = NvBufSurfTransform(nvbuf_surf, surf, &src->transform_params);
+
     g_mutex_lock (&src->argus_buffer_consumed_lock);
     g_cond_signal (&src->argus_buffer_consumed_cond);
     src->is_argus_buffer_consumed = TRUE;
