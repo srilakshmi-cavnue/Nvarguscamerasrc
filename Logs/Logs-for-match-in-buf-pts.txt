@@ -1,0 +1,329 @@
+root@jetson-6eeb:/usr/lib/camera_to_cloud# python service.py 
+GST_ARGUS: NvArgusCameraSrc: Setting Exposure Time Range : 34000 358733000
+GST_ARGUS: NvArgusCameraSrc: Setting Gain Range : 1 16
+GST_ARGUS: NvArgusCameraSrc: Setting ISP Digital Gain Range : 1 8
+Opening in BLOCKING MODE 
+WARNING: [TRT]: Using an engine plan file across different models of devices is not recommended and is likely to affect performance or even cause errors.
+0:00:04.924315595 81976     0x1a6a66d0 INFO                 nvinfer gstnvinfer.cpp:680:gst_nvinfer_logger:<nvinfer> NvDsInferContext[UID 1]: Info from NvDsInferContextImpl::deserializeEngineAndBackend() <nvdsinfer_context_impl.cpp:1909> [UID = 1]: deserialized trt engine from :/etc/cavnue/camera_to_cloud/deepstream/yolox_s.onnx_b1_gpu0_fp16.engine
+WARNING: [TRT]: The getMaxBatchSize() function should not be used with an engine built from a network created with NetworkDefinitionCreationFlag::kEXPLICIT_BATCH flag. This function will always return 1.
+INFO: [Implicit Engine Info]: layers num: 2
+0   INPUT  kFLOAT images          3x1088x1920     
+1   OUTPUT kFLOAT yolox_s.onnx    42840x13        
+
+0:00:05.106523611 81976     0x1a6a66d0 INFO                 nvinfer gstnvinfer.cpp:680:gst_nvinfer_logger:<nvinfer> NvDsInferContext[UID 1]: Info from NvDsInferContextImpl::generateBackendContext() <nvdsinfer_context_impl.cpp:2012> [UID = 1]: Use deserialized engine model: /etc/cavnue/camera_to_cloud/deepstream/yolox_s.onnx_b1_gpu0_fp16.engine
+0:00:05.119198531 81976     0x1a6a66d0 INFO                 nvinfer gstnvinfer_impl.cpp:328:notifyLoadModelStatus:<nvinfer> [UID 1]: Load new model:/etc/cavnue/camera_to_cloud/deepstream/config.txt sucessfully
+
+(python:81976): GStreamer-CRITICAL **: 06:18:25.543: gst_pad_create_stream_id_internal: assertion 'parent->numsrcpads <= 1 || stream_id' failed
+
+(python:81976): GStreamer-CRITICAL **: 06:18:25.543: gst_event_new_stream_start: assertion 'stream_id != NULL' failed
+
+(python:81976): GStreamer-CRITICAL **: 06:18:25.543: gst_event_set_group_id: assertion 'event != NULL' failed
+
+(python:81976): GStreamer-CRITICAL **: 06:18:25.543: gst_pad_push_event: assertion 'GST_IS_EVENT (event)' failed
+NvMMLiteOpen : Block : BlockType = 4 
+===== NvVideo: NVENC =====
+NvMMLiteBlockCreate : Block : BlockType = 4 
+GST_ARGUS: Creating output stream
+CONSUMER: Waiting until producer is connected...
+GST_ARGUS: Available Sensor modes :
+GST_ARGUS: 3840 x 2160 FR = 45.000000 fps Duration = 22222222 ; Analog Gain range min 1.000000, max 31.622776; Exposure Range min 34000, max 400000000;
+
+GST_ARGUS: 3840 x 2160 FR = 54.000002 fps Duration = 18518518 ; Analog Gain range min 1.000000, max 31.622776; Exposure Range min 34000, max 400000000;
+
+GST_ARGUS: 1920 x 1080 FR = 59.999999 fps Duration = 16666667 ; Analog Gain range min 1.000000, max 31.622776; Exposure Range min 34000, max 400000000;
+
+GST_ARGUS: 1920 x 1080 FR = 59.999999 fps Duration = 16666667 ; Analog Gain range min 1.000000, max 31.622776; Exposure Range min 34000, max 400000000;
+
+GST_ARGUS: Running with following settings:
+   Camera index = 0 
+   Camera mode  = 1 
+   Output Stream W = 3840 H = 2160 
+   seconds to Run    = 0 
+   Frame Rate = 54.000002 
+GST_ARGUS: Setup Complete, Starting captures for 0 seconds
+GST_ARGUS: Starting repeat capture requests.
+CONSUMER: Producer has connected; continuing.
+CONSUMER: Acquired Frame. 124
+CONSUMER: Acquired Frame: 1, Sensor SoF RTCPU Timestamp: 22264615236000
+CONSUMER: buffer pts  = 22233336216
+NV buf-1 : buffer.pts =  22233336216
+H264: Profile = 66, Level = 0 
+NVMEDIA: Need to set EMC bandwidth : 957333 
+CONSUMER: Acquired Frame: 2, Sensor SoF RTCPU Timestamp: 22264715233000
+CONSUMER: buffer pts  = 22233428581
+NvVideo: bBlitMode is set to TRUE 
+NV buf-1 : buffer.pts =  22233428581
+CONSUMER: Acquired Frame: 3, Sensor SoF RTCPU Timestamp: 22264815231000
+CONSUMER: buffer pts  = 22233527771
+NV buf-1 : buffer.pts =  22233527771
+INF probe: frame_num =  0  frame_metadata.buf_pts =  22233336216
+CONSUMER: Acquired Frame: 4, Sensor SoF RTCPU Timestamp: 22264915229000
+CONSUMER: buffer pts  = 22233624996
+NV buf-1 : buffer.pts =  22233624996
+CONSUMER: Acquired Frame: 5, Sensor SoF RTCPU Timestamp: 22265015227000
+CONSUMER: buffer pts  = 22233724988
+INF probe: frame_num =  1  frame_metadata.buf_pts =  22233428581
+NV buf-1 : buffer.pts =  22233724988
+INF probe: frame_num =  2  frame_metadata.buf_pts =  22233527771
+INF probe: frame_num =  3  frame_metadata.buf_pts =  22233624996
+CONSUMER: Acquired Frame: 6, Sensor SoF RTCPU Timestamp: 22265115225000
+CONSUMER: buffer pts  = 22233825070
+INF probe: frame_num =  4  frame_metadata.buf_pts =  22233724988
+NV buf-1 : buffer.pts =  22233825070
+CONSUMER: Acquired Frame: 7, Sensor SoF RTCPU Timestamp: 22265215222000
+CONSUMER: buffer pts  = 22233925130
+INF probe: frame_num =  5  frame_metadata.buf_pts =  22233825070
+NV buf-1 : buffer.pts =  22233925130
+CONSUMER: Acquired Frame: 8, Sensor SoF RTCPU Timestamp: 22265315220000
+CONSUMER: buffer pts  = 22234024679
+INF probe: frame_num =  6  frame_metadata.buf_pts =  22233925130
+NV buf-1 : buffer.pts =  22234024679
+CONSUMER: Acquired Frame: 9, Sensor SoF RTCPU Timestamp: 22265415218000
+CONSUMER: buffer pts  = 22234124071
+INF probe: frame_num =  7  frame_metadata.buf_pts =  22234024679
+NV buf-1 : buffer.pts =  22234124071
+INF probe: frame_num =  8  frame_metadata.buf_pts =  22234124071
+CONSUMER: Acquired Frame: 10, Sensor SoF RTCPU Timestamp: 22265515216000
+CONSUMER: buffer pts  = 22234253404
+NV buf-1 : buffer.pts =  22234253404
+CONSUMER: Acquired Frame: 11, Sensor SoF RTCPU Timestamp: 22265615214000
+CONSUMER: buffer pts  = 22234350271
+NV buf-1 : buffer.pts =  22234350271
+INF probe: frame_num =  9  frame_metadata.buf_pts =  22234253404
+CONSUMER: Acquired Frame: 12, Sensor SoF RTCPU Timestamp: 22265715211000
+CONSUMER: buffer pts  = 22234417977
+NV buf-1 : buffer.pts =  22234417977
+INF probe: frame_num =  10  frame_metadata.buf_pts =  22234350271
+INF probe: frame_num =  11  frame_metadata.buf_pts =  22234417977
+CONSUMER: Acquired Frame: 13, Sensor SoF RTCPU Timestamp: 22265815209000
+CONSUMER: buffer pts  = 22234528583
+NV buf-1 : buffer.pts =  22234528583
+CONSUMER: Acquired Frame: 14, Sensor SoF RTCPU Timestamp: 22265915207000
+CONSUMER: buffer pts  = 22234620669
+NV buf-1 : buffer.pts =  22234620669
+INF probe: frame_num =  12  frame_metadata.buf_pts =  22234528583
+INF probe: frame_num =  13  frame_metadata.buf_pts =  22234620669
+CONSUMER: Acquired Frame: 15, Sensor SoF RTCPU Timestamp: 22266015205000
+CONSUMER: buffer pts  = 22234756653
+NV buf-1 : buffer.pts =  22234756653
+CONSUMER: Acquired Frame: 16, Sensor SoF RTCPU Timestamp: 22266115203000
+CONSUMER: buffer pts  = 22234840142
+NV buf-1 : buffer.pts =  22234840142
+INF probe: frame_num =  14  frame_metadata.buf_pts =  22234756653
+CONSUMER: Acquired Frame: 17, Sensor SoF RTCPU Timestamp: 22266215200000
+CONSUMER: buffer pts  = 22234925821
+INF probe: frame_num =  15  frame_metadata.buf_pts =  22234840142
+NV buf-1 : buffer.pts =  22234925821
+CONSUMER: Acquired Frame: 18, Sensor SoF RTCPU Timestamp: 22266315198000
+CONSUMER: buffer pts  = 22235023904
+INF probe: frame_num =  16  frame_metadata.buf_pts =  22234925821
+NV buf-1 : buffer.pts =  22235023904
+INF probe: frame_num =  17  frame_metadata.buf_pts =  22235023904
+CONSUMER: Acquired Frame: 19, Sensor SoF RTCPU Timestamp: 22266415196000
+CONSUMER: buffer pts  = 22235154896
+NV buf-1 : buffer.pts =  22235154896
+CONSUMER: Acquired Frame: 20, Sensor SoF RTCPU Timestamp: 22266515194000
+CONSUMER: buffer pts  = 22235235293
+NV buf-1 : buffer.pts =  22235235293
+INF probe: frame_num =  18  frame_metadata.buf_pts =  22235154896
+CONSUMER: Acquired Frame: 21, Sensor SoF RTCPU Timestamp: 22266615192000
+CONSUMER: buffer pts  = 22235323231
+INF probe: frame_num =  19  frame_metadata.buf_pts =  22235235293
+NV buf-1 : buffer.pts =  22235323231
+INF probe: frame_num =  20  frame_metadata.buf_pts =  22235323231
+CONSUMER: Acquired Frame: 22, Sensor SoF RTCPU Timestamp: 22266715189000
+CONSUMER: buffer pts  = 22235427178
+NV buf-1 : buffer.pts =  22235427178
+CONSUMER: Acquired Frame: 23, Sensor SoF RTCPU Timestamp: 22266815187000
+CONSUMER: buffer pts  = 22235526140
+INF probe: frame_num =  21  frame_metadata.buf_pts =  22235427178
+NV buf-1 : buffer.pts =  22235526140
+CONSUMER: Acquired Frame: 24, Sensor SoF RTCPU Timestamp: 22266915185000
+CONSUMER: buffer pts  = 22235625653
+INF probe: frame_num =  22  frame_metadata.buf_pts =  22235526140
+NV buf-1 : buffer.pts =  22235625653
+CONSUMER: Acquired Frame: 25, Sensor SoF RTCPU Timestamp: 22267015183000
+CONSUMER: buffer pts  = 22235727375
+INF probe: frame_num =  23  frame_metadata.buf_pts =  22235625653
+NV buf-1 : buffer.pts =  22235727375
+CONSUMER: Acquired Frame: 26, Sensor SoF RTCPU Timestamp: 22267115180000
+CONSUMER: buffer pts  = 22235823568
+NV buf-1 : buffer.pts =  22235823568
+INF probe: frame_num =  24  frame_metadata.buf_pts =  22235727375
+CONSUMER: Acquired Frame: 27, Sensor SoF RTCPU Timestamp: 22267215178000
+CONSUMER: buffer pts  = 22235926194
+INF probe: frame_num =  25  frame_metadata.buf_pts =  22235823568
+NV buf-1 : buffer.pts =  22235926194
+CONSUMER: Acquired Frame: 28, Sensor SoF RTCPU Timestamp: 22267315176000
+CONSUMER: buffer pts  = 22236026538
+INF probe: frame_num =  26  frame_metadata.buf_pts =  22235926194
+NV buf-1 : buffer.pts =  22236026538
+CONSUMER: Acquired Frame: 29, Sensor SoF RTCPU Timestamp: 22267415174000
+CONSUMER: buffer pts  = 22236128644
+INF probe: frame_num =  27  frame_metadata.buf_pts =  22236026538
+NV buf-1 : buffer.pts =  22236128644
+CONSUMER: Acquired Frame: 30, Sensor SoF RTCPU Timestamp: 22267515172000
+CONSUMER: buffer pts  = 22236226484
+INF probe: frame_num =  28  frame_metadata.buf_pts =  22236128644
+NV buf-1 : buffer.pts =  22236226484
+CONSUMER: Acquired Frame: 31, Sensor SoF RTCPU Timestamp: 22267615169000
+CONSUMER: buffer pts  = 22236326476
+INF probe: frame_num =  29  frame_metadata.buf_pts =  22236226484
+NV buf-1 : buffer.pts =  22236326476
+CONSUMER: Acquired Frame: 32, Sensor SoF RTCPU Timestamp: 22267715167000
+CONSUMER: buffer pts  = 22236422229
+INF probe: frame_num =  30  frame_metadata.buf_pts =  22236326476
+NV buf-1 : buffer.pts =  22236422229
+INF probe: frame_num =  31  frame_metadata.buf_pts =  22236422229
+CONSUMER: Acquired Frame: 33, Sensor SoF RTCPU Timestamp: 22267815165000
+CONSUMER: buffer pts  = 22236528447
+NV buf-1 : buffer.pts =  22236528447
+CONSUMER: Acquired Frame: 34, Sensor SoF RTCPU Timestamp: 22267915163000
+CONSUMER: buffer pts  = 22236624278
+NV buf-1 : buffer.pts =  22236624278
+INF probe: frame_num =  32  frame_metadata.buf_pts =  22236528447
+INF probe: frame_num =  33  frame_metadata.buf_pts =  22236624278
+CONSUMER: Acquired Frame: 35, Sensor SoF RTCPU Timestamp: 22268015161000
+CONSUMER: buffer pts  = 22236751495
+NV buf-1 : buffer.pts =  22236751495
+CONSUMER: Acquired Frame: 36, Sensor SoF RTCPU Timestamp: 22268115158000
+CONSUMER: buffer pts  = 22236852185
+NV buf-1 : buffer.pts =  22236852185
+INF probe: frame_num =  34  frame_metadata.buf_pts =  22236751495
+CONSUMER: Acquired Frame: 37, Sensor SoF RTCPU Timestamp: 22268215156000
+CONSUMER: buffer pts  = 22236919241
+NV buf-1 : buffer.pts =  22236919241
+INF probe: frame_num =  35  frame_metadata.buf_pts =  22236852185
+INF probe: frame_num =  36  frame_metadata.buf_pts =  22236919241
+CONSUMER: Acquired Frame: 38, Sensor SoF RTCPU Timestamp: 22268315154000
+CONSUMER: buffer pts  = 22237049828
+NV buf-1 : buffer.pts =  22237049828
+CONSUMER: Acquired Frame: 39, Sensor SoF RTCPU Timestamp: 22268415152000
+CONSUMER: buffer pts  = 22237133051
+NV buf-1 : buffer.pts =  22237133051
+INF probe: frame_num =  37  frame_metadata.buf_pts =  22237049828
+INF probe: frame_num =  38  frame_metadata.buf_pts =  22237133051
+CONSUMER: Acquired Frame: 40, Sensor SoF RTCPU Timestamp: 22268515150000
+CONSUMER: buffer pts  = 22237254472
+NV buf-1 : buffer.pts =  22237254472
+CONSUMER: Acquired Frame: 41, Sensor SoF RTCPU Timestamp: 22268615147000
+CONSUMER: buffer pts  = 22237333809
+NV buf-1 : buffer.pts =  22237333809
+INF probe: frame_num =  39  frame_metadata.buf_pts =  22237254472
+INF probe: frame_num =  40  frame_metadata.buf_pts =  22237333809
+CONSUMER: Acquired Frame: 42, Sensor SoF RTCPU Timestamp: 22268715145000
+CONSUMER: buffer pts  = 22237452647
+NV buf-1 : buffer.pts =  22237452647
+CONSUMER: Acquired Frame: 43, Sensor SoF RTCPU Timestamp: 22268815143000
+CONSUMER: buffer pts  = 22237553490
+INF probe: frame_num =  41  frame_metadata.buf_pts =  22237452647
+NV buf-1 : buffer.pts =  22237553490
+CONSUMER: Acquired Frame: 44, Sensor SoF RTCPU Timestamp: 22268915141000
+CONSUMER: buffer pts  = 22237654930
+INF probe: frame_num =  42  frame_metadata.buf_pts =  22237553490
+NV buf-1 : buffer.pts =  22237654930
+CONSUMER: Acquired Frame: 45, Sensor SoF RTCPU Timestamp: 22269015139000
+CONSUMER: buffer pts  = 22237749515
+INF probe: frame_num =  43  frame_metadata.buf_pts =  22237654930
+NV buf-1 : buffer.pts =  22237749515
+CONSUMER: Acquired Frame: 46, Sensor SoF RTCPU Timestamp: 22269115136000
+CONSUMER: buffer pts  = 22237818348
+NV buf-1 : buffer.pts =  22237818348
+INF probe: frame_num =  44  frame_metadata.buf_pts =  22237749515
+INF probe: frame_num =  45  frame_metadata.buf_pts =  22237818348
+CONSUMER: Acquired Frame: 47, Sensor SoF RTCPU Timestamp: 22269215134000
+CONSUMER: buffer pts  = 22237956793
+NV buf-1 : buffer.pts =  22237956793
+CONSUMER: Acquired Frame: 48, Sensor SoF RTCPU Timestamp: 22269315132000
+CONSUMER: buffer pts  = 22238061737
+NV buf-1 : buffer.pts =  22238061737
+INF probe: frame_num =  46  frame_metadata.buf_pts =  22237956793
+CONSUMER: Acquired Frame: 49, Sensor SoF RTCPU Timestamp: 22269415130000
+CONSUMER: buffer pts  = 22238127231
+NV buf-1 : buffer.pts =  22238127231
+INF probe: frame_num =  47  frame_metadata.buf_pts =  22238061737
+INF probe: frame_num =  48  frame_metadata.buf_pts =  22238127231
+CONSUMER: Acquired Frame: 50, Sensor SoF RTCPU Timestamp: 22269515127000
+CONSUMER: buffer pts  = 22238224405
+NV buf-1 : buffer.pts =  22238224405
+INF probe: frame_num =  49  frame_metadata.buf_pts =  22238224405
+CONSUMER: Acquired Frame: 51, Sensor SoF RTCPU Timestamp: 22269615125000
+CONSUMER: buffer pts  = 22238354908
+NV buf-1 : buffer.pts =  22238354908
+CONSUMER: Acquired Frame: 52, Sensor SoF RTCPU Timestamp: 22269715123000
+CONSUMER: buffer pts  = 22238444463
+NV buf-1 : buffer.pts =  22238444463
+INF probe: frame_num =  50  frame_metadata.buf_pts =  22238354908
+CONSUMER: Acquired Frame: 53, Sensor SoF RTCPU Timestamp: 22269815121000
+CONSUMER: buffer pts  = 22238523702
+NV buf-1 : buffer.pts =  22238523702
+INF probe: frame_num =  51  frame_metadata.buf_pts =  22238444463
+INF probe: frame_num =  52  frame_metadata.buf_pts =  22238523702
+CONSUMER: Acquired Frame: 54, Sensor SoF RTCPU Timestamp: 22269915119000
+CONSUMER: buffer pts  = 22238653763
+NV buf-1 : buffer.pts =  22238653763
+CONSUMER: Acquired Frame: 55, Sensor SoF RTCPU Timestamp: 22270015116000
+CONSUMER: buffer pts  = 22238736347
+NV buf-1 : buffer.pts =  22238736347
+INF probe: frame_num =  53  frame_metadata.buf_pts =  22238653763
+INF probe: frame_num =  54  frame_metadata.buf_pts =  22238736347
+CONSUMER: Acquired Frame: 56, Sensor SoF RTCPU Timestamp: 22270115114000
+CONSUMER: buffer pts  = 22238851749
+NV buf-1 : buffer.pts =  22238851749
+CONSUMER: Acquired Frame: 57, Sensor SoF RTCPU Timestamp: 22270215112000
+CONSUMER: buffer pts  = 22238951656
+INF probe: frame_num =  55  frame_metadata.buf_pts =  22238851749
+NV buf-1 : buffer.pts =  22238951656
+CONSUMER: Acquired Frame: 58, Sensor SoF RTCPU Timestamp: 22270315110000
+CONSUMER: buffer pts  = 22239053037
+INF probe: frame_num =  56  frame_metadata.buf_pts =  22238951656
+NV buf-1 : buffer.pts =  22239053037
+CONSUMER: Acquired Frame: 59, Sensor SoF RTCPU Timestamp: 22270415107000
+CONSUMER: buffer pts  = 22239121567
+NV buf-1 : buffer.pts =  22239121567
+INF probe: frame_num =  57  frame_metadata.buf_pts =  22239053037
+INF probe: frame_num =  58  frame_metadata.buf_pts =  22239121567
+CONSUMER: Acquired Frame: 60, Sensor SoF RTCPU Timestamp: 22270515105000
+CONSUMER: buffer pts  = 22239225559
+NV buf-1 : buffer.pts =  22239225559
+CONSUMER: Acquired Frame: 61, Sensor SoF RTCPU Timestamp: 22270615103000
+CONSUMER: buffer pts  = 22239324849
+INF probe: frame_num =  59  frame_metadata.buf_pts =  22239225559
+NV buf-1 : buffer.pts =  22239324849
+CONSUMER: Acquired Frame: 62, Sensor SoF RTCPU Timestamp: 22270715101000
+CONSUMER: buffer pts  = 22239424921
+INF probe: frame_num =  60  frame_metadata.buf_pts =  22239324849
+NV buf-1 : buffer.pts =  22239424921
+CONSUMER: Acquired Frame: 63, Sensor SoF RTCPU Timestamp: 22270815099000
+CONSUMER: buffer pts  = 22239527184
+INF probe: frame_num =  61  frame_metadata.buf_pts =  22239424921
+NV buf-1 : buffer.pts =  22239527184
+INF probe: frame_num =  62  frame_metadata.buf_pts =  22239527184
+CONSUMER: Acquired Frame: 64, Sensor SoF RTCPU Timestamp: 22270915096000
+CONSUMER: buffer pts  = 22239653197
+NV buf-1 : buffer.pts =  22239653197
+CONSUMER: Acquired Frame: 65, Sensor SoF RTCPU Timestamp: 22271015094000
+CONSUMER: buffer pts  = 22239749543
+NV buf-1 : buffer.pts =  22239749543
+INF probe: frame_num =  63  frame_metadata.buf_pts =  22239653197
+CONSUMER: Acquired Frame: 66, Sensor SoF RTCPU Timestamp: 22271115092000
+CONSUMER: buffer pts  = 22239849558
+INF probe: frame_num =  64  frame_metadata.buf_pts =  22239749543
+NV buf-1 : buffer.pts =  22239849558
+CONSUMER: Acquired Frame: 67, Sensor SoF RTCPU Timestamp: 22271215090000
+CONSUMER: buffer pts  = 22239957203
+INF probe: frame_num =  65  frame_metadata.buf_pts =  22239849558
+NV buf-1 : buffer.pts =  22239957203
+CONSUMER: Acquired Frame: 68, Sensor SoF RTCPU Timestamp: 22271315088000
+CONSUMER: buffer pts  = 22240029882
+NV buf-1 : buffer.pts =  22240029882
+INF probe: frame_num =  66  frame_metadata.buf_pts =  22239957203
+INF probe: frame_num =  67  frame_metadata.buf_pts =  22240029882
+CONSUMER: Acquired Frame: 69, Sensor SoF RTCPU Timestamp: 22271415085000
+CONSUMER: buffer pts  = 22240125021
+^CVideoProcessor | MainProcess | 81976 | 2024-09-19 06:18:33,500 | root | ERROR | Received signal 2. Cleaning up and exiting.
+NV buf-1 : buffer.pts =  22240125021
+INF probe: frame_num =  68  frame_metadata.buf_pts =  22240125021
+CONSUMER: Acquired Frame: 70, Sensor SoF RTCPU Timestamp: 22271515083000
+CONSUMER: buffer pts  = 22240253351
+NV buf-1 : buffer.pts =  22240253351

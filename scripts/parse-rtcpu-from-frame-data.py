@@ -5,6 +5,10 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+#Regex for parsing different logs
+#pattern = re.compile('CONSUMER: Acquired Frame: (\d+), SoF-RTCPU: (\d+)')
+#pattern = re.compile('CONSUMER: Acquired Frame: (\d+), iFrameTime: (\d+)')
+
 pattern = re.compile('frame-num = (\d+),frame-rtcpu-timestamp = (\d+)')
 
 frame_time_dict = {}
@@ -33,7 +37,8 @@ def parse_nvargus_logs(filename : str) -> None:
 						prev = timestamp # previous time
 						timestamp = int(frametimens) # fetch the current time
 						diff = abs(prev - timestamp)
-						print(diff)
+						#print(diff)
+						#Remove outliers if required.
 					frame_time_dict[framecount] = (diff)
 	except Exception:
 		print(f"Unable to open file {filename}")
