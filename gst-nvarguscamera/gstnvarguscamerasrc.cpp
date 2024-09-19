@@ -741,7 +741,7 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
       //Set the PTS to epoch time g_get_real_time() or kernel monotonic time
       GstClockTime pts = g_get_monotonic_time();
 
-      //Set PTS to buffer
+      //Assign PTS value to this buffer
       GST_BUFFER_PTS(buf) = pts; //Can set to the same monotonic-time as above
 
       // Create object to map the GstBuffer to memory to access raw data
@@ -1803,6 +1803,14 @@ consumer_thread (gpointer src_base)
       goto done;
     }
     gst_buffer_map (buffer, &outmap, GST_MAP_WRITE);
+
+    // Fetch the monotonic time
+    GstClockTime pts = g_get_monotonic_time();
+
+    //Assign PTS value to this buffer
+    GST_BUFFER_PTS(buffer) = pts;
+    CONSUMER_PRINT("buffer pts  = %lu\n", buffer->pts);
+
     NvBufSurface*  surf = (NvBufSurface *)outmap.data; // Cast the outmap's 'data' pointer to NvBufSurface* to parse the data as NvBufStructure's attributes
     // Can extract GstBuffer contents here, depending on the attibutes
 
@@ -1829,8 +1837,6 @@ consumer_thread (gpointer src_base)
     }
 
     gst_buffer_unmap (buffer, &outmap);
-
-    // No buffer.PTS information available here
 
     g_mutex_lock (&src->nvmm_buffers_queue_lock);
     g_queue_push_tail (src->nvmm_buffers, buffer); //Push GstBuffer to end of 'nvmm_buffers' GQueue
