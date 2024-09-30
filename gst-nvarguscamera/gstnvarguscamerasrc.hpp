@@ -113,6 +113,7 @@ typedef struct NvArgusFrameInfo
   gint fd;
   guint64 frameNum;
   guint64 frameTime;
+  guint64 sofRtcpuTimestamp; //SoF RTCPU timestamp
 } NvArgusFrameInfo;
 
 struct _GstNvArgusCameraSrc

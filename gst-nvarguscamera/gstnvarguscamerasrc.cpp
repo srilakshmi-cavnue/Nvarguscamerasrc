@@ -697,9 +697,10 @@ bool StreamConsumer::threadExecute(GstNvArgusCameraSrc *src)
         CONSUMER_PRINT("Acquired Frame: %llu, Sensor SoF RTCPU Timestamp: %llu\n" , static_cast<unsigned long long>(iFrame->getNumber()), static_cast<unsigned long long>(iSensorTimestampTsc->getSensorSofTimestampTsc()));
       }
 
-      // Send the frame number and frame timestamp in GQueue to the 'consumer'
+      // Send the frame number, frame timestamp and frame RTCPU timestamp in GQueue to the 'consumer'
       src->frameInfo->frameNum = iFrame->getNumber();
       src->frameInfo->frameTime = iFrame->getTime();
+      src->frameInfo->sofRtcpuTimestamp = iSensorTimestampTsc->getSensorSofTimestampTsc();
 
       g_mutex_lock (&src->argus_buffers_queue_lock);
       g_queue_push_tail (src->argus_buffers, (src->frameInfo)); // Push frameInfo to the end of 'argus_buffers' GQueue
@@ -1805,11 +1806,8 @@ consumer_thread (gpointer src_base)
     }
     gst_buffer_map (buffer, &outmap, GST_MAP_WRITE);
 
-    // Fetch the monotonic time
-    GstClockTime pts = g_get_monotonic_time();
-
-    //Assign PTS value to this buffer
-    GST_BUFFER_PTS(buffer) = pts;
+    //Assign RTCPU timestamp to the buffer PTS
+    GST_BUFFER_PTS(buffer) = consumerFrameInfo->sofRtcpuTimestamp;
     CONSUMER_PRINT("buffer pts  = %lu\n", buffer->pts);
 
     NvBufSurface*  surf = (NvBufSurface *)outmap.data; // Cast the outmap's 'data' pointer to NvBufSurface* to parse the data as NvBufStructure's attributes
